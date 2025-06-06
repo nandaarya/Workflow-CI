@@ -40,7 +40,7 @@ jobs:
 
     - name: Run MLflow Project
       run: |
-        mlflow run . --env-manager=local --run-name stunting_xgb_run
+        mlflow run MLProject --env-manager=local --run-name stunting_xgb_run
 
     - name: Get latest MLflow run_id
       run: |
