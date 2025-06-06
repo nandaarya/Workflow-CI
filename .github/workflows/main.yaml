@@ -10,6 +10,7 @@ on:
 
 env:
   EXPERIMENT_NAME: Stunting_Detection_XGBoost_Model_Tuning
+  BEST_METRIC: f1_macro
   MLFLOW_TRACKING_URI: https://dagshub.com/nandaarya/stunting-detection.mlflow
   MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
   MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
@@ -42,18 +43,30 @@ jobs:
       run: |
         mlflow run MLProject --env-manager=local --run-name stunting_xgb_run
 
-    - name: Get latest MLflow run_id
+    - name: Get Best MLflow run_id by f1_macro
       run: |
-        echo "Fetching latest run ID from experiment..."
+        echo "Fetching best run ID by f1_macro..."
         python <<EOF
         import mlflow
+        import os
+
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
         client = mlflow.tracking.MlflowClient()
-        experiment = client.get_experiment_by_name("${{ env.EXPERIMENT_NAME }}")
+        experiment = client.get_experiment_by_name(os.environ["EXPERIMENT_NAME"])
         if not experiment:
             raise Exception("Experiment not found.")
-        runs = client.search_runs(experiment_ids=[experiment.experiment_id], order_by=["start_time DESC"])
+
+        # Ambil run_id terbaik berdasarkan f1_macro
+        runs = client.search_runs(
+            experiment_ids=[experiment.experiment_id],
+            order_by=[f"metrics.{os.environ['BEST_METRIC']} DESC"]
+        )
+
+        if not runs:
+            raise Exception("No runs found in experiment.")
+
         run_id = runs[0].info.run_id
-        print("Latest run ID:", run_id)
+        print("Best run ID (by f1_macro):", run_id)
         with open("${GITHUB_ENV}", "a") as f:
             f.write(f"RUN_ID={run_id}\n")
         EOF
