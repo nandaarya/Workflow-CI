@@ -1,0 +1,14 @@
+name: stunting-detection-env
+channels:
+  - defaults
+dependencies:
+  - python=3.12.9
+  - pip<=25.1
+  - pip:
+      - mlflow==2.22.0
+      - mlflow_skinny==2.22.0
+      - numpy==2.2.6
+      - optuna==4.3.0
+      - pandas==2.3.0
+      - scikit_learn==1.7.0
+      - xgboost==3.0.2
